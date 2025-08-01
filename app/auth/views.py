@@ -4,6 +4,7 @@ from . import auth
 from app.models.user import User
 from app import db
 from app import login_manager
+from flask import jsonify
 import logging
 
 # Configure logging (for debugging; comment out or set to WARNING in production)
@@ -121,6 +122,39 @@ def logout():
     
     # Redirect to login page
     return redirect(url_for('auth.login'))
+
+@auth.route('/api/auth/verify')
+def verify_token():
+    """API endpoint to verify authentication token for React frontend."""
+    if current_user.is_authenticated:
+        return jsonify({
+            'user': {
+                'id': current_user.id,
+                'name': current_user.name,
+                'email': current_user.email,
+                'is_admin': current_user.is_admin,
+                'job_title': current_user.job_title,
+                'department': current_user.department,
+                'company_name': current_user.company_name,
+                'office_location': current_user.office_location,
+                'last_login': current_user.last_login.isoformat() if current_user.last_login else None
+            }
+        })
+    else:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+@auth.route('/microsoft-url')
+def get_microsoft_auth_url():
+    """API endpoint to get Microsoft OAuth URL for React frontend."""
+    try:
+        client = User.get_microsoft_client()
+        auth_url = client.get_authorization_request_url(
+            scopes=["User.Read"],
+            redirect_uri=current_app.config['MICROSOFT_REDIRECT_URI']
+        )
+        return jsonify({'auth_url': auth_url})
+    except Exception as e:
+        return jsonify({'error': 'Microsoft login unavailable'}), 500
 
 def redirect_to_appropriate_page():
     """Determine and redirect to the correct dashboard based on user role."""

@@ -1,6 +1,7 @@
 from flask import Flask, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_cors import CORS
 from config import config
 from flask_migrate import Migrate
 import os
@@ -40,6 +41,9 @@ def create_app(config_name='default'):
     # Create Flask app instance and load configuration
     app = Flask(__name__)
     app.config.from_object(config[config_name])
+    
+    # Enable CORS for React frontend
+    CORS(app, origins=['http://localhost:3000'], supports_credentials=True)
 
     try:
         # Initialize Flask extensions with app context

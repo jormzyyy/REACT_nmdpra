@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Swal from 'sweetalert2';
-import axios from 'axios';
 import './Login.css';
 
 const Login = () => {
@@ -11,8 +10,9 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [authUrl, setAuthUrl] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, loginWithMicrosoft, user } = useAuth();
+  const { login, loginWithMicrosoft, getMicrosoftAuthUrl, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (user) {
@@ -21,17 +21,50 @@ const Login = () => {
   }, [user, navigate]);
 
   useEffect(() => {
+    // Check for error parameters from OAuth callback
+    const urlParams = new URLSearchParams(location.search);
+    const error = urlParams.get('error');
+    
+    if (error) {
+      let errorMessage = 'Authentication failed';
+      switch (error) {
+        case 'no_code':
+          errorMessage = 'Microsoft authentication failed - no authorization code received.';
+          break;
+        case 'auth_failed':
+          errorMessage = 'Microsoft authentication failed - could not create or retrieve user.';
+          break;
+        case 'server_error':
+          errorMessage = 'Microsoft authentication failed - server error.';
+          break;
+        default:
+          errorMessage = 'Authentication failed. Please try again.';
+      }
+      
+      Swal.fire({
+        icon: 'error',
+        title: errorMessage,
+        showConfirmButton: false,
+        timer: 3000,
+      });
+      
+      // Clean up URL
+      navigate('/login', { replace: true });
+    }
+  }, [location, navigate]);
+
+  useEffect(() => {
     // Fetch Microsoft auth URL
     const fetchAuthUrl = async () => {
       try {
-        const response = await axios.get('/auth/microsoft-url');
-        setAuthUrl(response.data.auth_url);
+        const url = await getMicrosoftAuthUrl();
+        setAuthUrl(url);
       } catch (error) {
         console.error('Failed to fetch Microsoft auth URL:', error);
       }
     };
     fetchAuthUrl();
-  }, []);
+  }, [getMicrosoftAuthUrl]);
 
   const handleLocalLogin = async (e) => {
     e.preventDefault();

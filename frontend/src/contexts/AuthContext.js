@@ -12,24 +12,22 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
-    const token = localStorage.getItem('token');
-    if (token) {
-      // Verify token with backend
-      verifyToken(token);
-    } else {
-      setLoading(false);
-    }
+    // Check if user is already logged in by verifying session with backend
+    verifySession();
   }, []);
 
-  const verifyToken = async (token) => {
+  const verifySession = async () => {
     try {
       const response = await axios.get('/api/auth/verify', {
-        headers: { Authorization: `Bearer ${token}` }
+        withCredentials: true
       });
-      setUser(response.data.user);
+      
+      if (response.data.success) {
+        setUser(response.data.user);
+      }
     } catch (error) {
-      localStorage.removeItem('token');
+      // User is not authenticated, which is fine
+      console.log('No active session');
     } finally {
       setLoading(false);
     }
@@ -37,31 +35,60 @@ export function AuthProvider({ children }) {
 
   const login = async (credentials) => {
     try {
-      const response = await axios.post('/auth/login/local', credentials);
-      const { user, token } = response.data;
-      localStorage.setItem('token', token);
-      setUser(user);
-      return { success: true };
+      const response = await axios.post('/api/login/local', credentials, {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.data.success) {
+        setUser(response.data.user);
+        return { success: true };
+      } else {
+        return { 
+          success: false, 
+          error: response.data.error || 'Login failed' 
+        };
+      }
     } catch (error) {
       return { 
         success: false, 
-        error: error.response?.data?.message || 'Login failed' 
+        error: error.response?.data?.error || 'Login failed' 
       };
     }
   };
 
   const loginWithMicrosoft = (authUrl) => {
+    // Redirect to Microsoft OAuth
     window.location.href = authUrl;
   };
 
   const logout = async () => {
     try {
-      await axios.get('/auth/logout');
+      await axios.post('/api/logout', {}, {
+        withCredentials: true
+      });
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('token');
       setUser(null);
+    }
+  };
+
+  const getMicrosoftAuthUrl = async () => {
+    try {
+      const response = await axios.get('/api/microsoft-url', {
+        withCredentials: true
+      });
+      
+      if (response.data.success) {
+        return response.data.auth_url;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching Microsoft auth URL:', error);
+      return null;
     }
   };
 
@@ -70,6 +97,7 @@ export function AuthProvider({ children }) {
     login,
     loginWithMicrosoft,
     logout,
+    getMicrosoftAuthUrl,
     loading
   };
 

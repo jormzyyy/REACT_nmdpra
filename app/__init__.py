@@ -43,7 +43,11 @@ def create_app(config_name='default'):
     app.config.from_object(config[config_name])
     
     # Enable CORS for React frontend
-    CORS(app, origins=['http://localhost:3000'], supports_credentials=True)
+    CORS(app, 
+         origins=['http://localhost:3000'], 
+         supports_credentials=True,
+         allow_headers=['Content-Type', 'Authorization'],
+         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 
     try:
         # Initialize Flask extensions with app context
@@ -78,8 +82,8 @@ def create_app(config_name='default'):
     # Register route for root URL
     @app.route('/')
     def index():
-        """Redirect root URL to login page"""
-        return redirect(url_for('auth.login'))
+        """Redirect root URL to React frontend"""
+        return redirect('http://localhost:3000')
 
     # Register blueprints for different app modules
     from app.auth import auth as auth_blueprint

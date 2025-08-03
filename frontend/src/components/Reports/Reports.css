@@ -1,0 +1,106 @@
+.report-container {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  border: 1px solid #dee2e6;
+}
+
+.inventory-table th,
+.inventory-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #dee2e6;
+  border-right: 1px solid #dee2e6;
+}
+
+.inventory-table th:last-child,
+.inventory-table td:last-child {
+  border-right: none;
+}
+
+.inventory-table th {
+  background-color: #e9ecef;
+  font-weight: bold;
+}
+
+.inventory-table tbody tr:hover {
+  background-color: #f2f2f2;
+}
+
+.action-button {
+  background-color: #0078d4;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.action-button:hover:not(:disabled) {
+  background-color: #006cbd;
+}
+
+.action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #2e7d32;
+  font-size: 1.1rem;
+}
+
+.error {
+  text-align: center;
+  padding: 2rem;
+  color: #c62828;
+  background-color: #ffebee;
+  border-radius: 4px;
+}
+
+.swal-form {
+  text-align: left;
+}
+
+.swal-form label {
+  display: block;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  color: #2e7d32;
+}
+
+.swal-form label:first-child {
+  margin-top: 0;
+}
+
+@media (max-width: 768px) {
+  .inventory-table th,
+  .inventory-table td {
+    padding: 8px;
+  }
+  
+  .report-buttons {
+    flex-direction: column;
+  }
+  
+  .action-button {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}

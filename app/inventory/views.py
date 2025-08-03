@@ -5,6 +5,7 @@ from app.models.inventory_transaction import InventoryTransaction
 from app.models.inventory_supplier import InventorySupplier
 from . import inventory
 import logging
+from flask import jsonify
 
 # Configure logging
 # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -307,3 +308,13 @@ def api_get_items_by_category(category_id):
     except Exception as e:
         # logger.error(f"Error fetching items by category: {e}")
         return jsonify({'error': 'Failed to fetch items'}), 500
+
+@inventory.route('/api/categories', methods=['GET'])
+@login_required
+def api_get_categories():
+    """API endpoint to get all categories."""
+    try:
+        categories = [category.to_dict() for category in Category.query.all()]
+        return jsonify(categories)
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch categories'}), 500

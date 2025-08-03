@@ -1,0 +1,167 @@
+.inventory-container {
+  background-color: white;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 2rem;
+}
+
+.inventory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.inventory-header h2 {
+  color: #2e7d32;
+  margin: 0;
+}
+
+.create-button {
+  background-color: #0078d4;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background-color 0.3s;
+}
+
+.create-button:hover {
+  background-color: #006cbd;
+}
+
+.inventory-filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.filter-select,
+.search-input {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  min-width: 200px;
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.inventory-table th,
+.inventory-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.inventory-table th {
+  background-color: #f8f9fa;
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.action-link {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  text-decoration: none;
+  margin-right: 0.5rem;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.action-link.view {
+  background-color: #0078d4;
+}
+
+.action-link.edit {
+  background-color: #ffc107;
+  color: black;
+}
+
+.action-link.delete {
+  background-color: #dc3545;
+}
+
+.action-link:hover {
+  opacity: 0.8;
+}
+
+.nav-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-link {
+  color: #2e7d32;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border: 1px solid #2e7d32;
+  border-radius: 4px;
+}
+
+.nav-link:hover {
+  background-color: #2e7d32;
+  color: white;
+}
+
+.stock-status-btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: bold;
+  text-align: center;
+  min-width: 100px;
+  border: none;
+  cursor: default;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stock-status-btn.in-stock {
+  background-color: #28a745;
+  color: white;
+}
+
+.stock-status-btn.low-stock {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.stock-status-btn.out-of-stock {
+  background-color: #dc3545;
+  color: white;
+}
+
+.quantity-display {
+  font-weight: bold;
+  color: #2e7d32;
+}
+
+.quantity-display.low-stock {
+  color: #ffc107;
+}
+
+.quantity-display.out-of-stock {
+  color: #dc3545;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #2e7d32;
+}

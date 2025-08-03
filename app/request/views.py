@@ -6,6 +6,7 @@ from app import db
 from datetime import datetime, UTC
 from app.request import request as request_bp
 from app.models.request import RequestStatus
+from flask import jsonify
 
 def get_stock_status(quantity):
     """Helper function to determine stock status based on quantity."""
@@ -493,3 +494,40 @@ def delete_all_deleted_requests():
         # current_app.logger.error(f"Error deleting all deleted requests: {str(e)}")
         flash('An error occurred while deleting all deleted requests', 'error')
     return redirect(url_for('request.get_deleted_requests'))
+
+
+# API Routes for React frontend
+@request_bp.route('/api/requests', methods=['GET'])
+@login_required
+def api_get_requests():
+    """API endpoint to get requests."""
+    try:
+        user_only = request.args.get('user_only', 'false').lower() == 'true'
+        
+        if user_only:
+            requests = Request.get_user_requests(current_user.id)
+        else:
+            if not current_user.is_admin:
+                return jsonify({'error': 'Access denied'}), 403
+            requests = Request.get_all_requests()
+        
+        return jsonify([req.to_dict() for req in requests])
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch requests'}), 500
+
+@request_bp.route('/api/requests/<int:request_id>', methods=['GET'])
+@login_required
+def api_get_request(request_id):
+    """API endpoint to get a specific request."""
+    try:
+        req = Request.get_request_by_id(request_id)
+        if not req:
+            return jsonify({'error': 'Request not found'}), 404
+        
+        # Check authorization
+        if not current_user.is_admin and req.user_id != current_user.id:
+            return jsonify({'error': 'Access denied'}), 403
+        
+        return jsonify(req.to_dict())
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch request'}), 500

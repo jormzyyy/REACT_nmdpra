@@ -9,6 +9,7 @@ from . import purchases
 from app import db
 from datetime import datetime, UTC, date, time, timedelta
 from sqlalchemy import and_, or_
+from flask import jsonify
 
 # Helper function to check admin access
 def admin_required(f):
@@ -157,3 +158,43 @@ def delete_purchase(purchase_id):
     db.session.commit()
     flash("Purchase deleted successfully.", "success")
     return redirect(url_for('purchases.list_purchases'))
+
+# API Routes for React frontend
+@purchases.route('/api/purchases', methods=['GET'])
+@admin_required
+def api_get_purchases():
+    """API endpoint to get purchases with filters."""
+    try:
+        supplier_name = request.args.get('supplier_name', '').strip()
+        item_name = request.args.get('item_name', '').strip()
+        start_date_str = request.args.get('start_date', '').strip()
+        end_date_str = request.args.get('end_date', '').strip()
+
+        query = InventoryTransaction.query.filter_by(transaction_type='purchase')
+
+        if supplier_name:
+            query = query.join(InventoryTransaction.supplier).filter(
+                InventorySupplier.supplier_name.ilike(f'%{supplier_name}%')
+            )
+
+        if item_name:
+            query = query.join(InventoryTransaction.inventory).filter(
+                Inventory.item_name.ilike(f'%{item_name}%')
+            )
+
+        try:
+            if start_date_str:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d').replace(tzinfo=UTC)
+                query = query.filter(InventoryTransaction.timestamp >= start_date)
+
+            if end_date_str:
+                end_date_parsed = datetime.strptime(end_date_str, '%Y-%m-%d').replace(tzinfo=UTC)
+                end_of_day = end_date_parsed + timedelta(days=1) - timedelta(microseconds=1)
+                query = query.filter(InventoryTransaction.timestamp <= end_of_day)
+        except ValueError:
+            return jsonify({'error': 'Invalid date format'}), 400
+
+        purchases = query.order_by(InventoryTransaction.timestamp.desc()).all()
+        return jsonify([purchase.to_dict() for purchase in purchases])
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch purchases'}), 500

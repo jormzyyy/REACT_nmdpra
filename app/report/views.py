@@ -15,6 +15,100 @@ from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 from . import reports
 
+@reports.route('/api/inventory', methods=['POST'])
+@login_required
+def api_inventory_report():
+    """API endpoint for generating inventory reports."""
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        data = request.get_json()
+        report_type = data.get('report_type')
+        category_id = data.get('category_id')
+        item_id = data.get('item_id')
+        location = data.get('location')
+
+        filters = {
+            'category_id': int(category_id) if category_id else None,
+            'item_id': int(item_id) if item_id else None,
+            'location': location if location else None
+        }
+
+        start_dt = end_dt = None
+
+        if report_type == 'monthly':
+            month = data.get('month')
+            if not month:
+                return jsonify({'error': 'Month is required for monthly report'}), 400
+            start_dt = datetime.strptime(month + "-01", "%Y-%m-%d")
+            next_month = start_dt.replace(day=28) + timedelta(days=4)
+            end_dt = next_month - timedelta(days=next_month.day)
+        elif report_type == 'weekly':
+            week_range = data.get('week_range')
+            if not week_range or "to" not in week_range:
+                return jsonify({'error': 'Date range is required for weekly report'}), 400
+            dates = [d.strip() for d in week_range.split("to")]
+            if len(dates) != 2:
+                return jsonify({'error': 'Invalid date range format'}), 400
+            start_dt = datetime.strptime(dates[0], "%Y-%m-%d")
+            end_dt = datetime.strptime(dates[1], "%Y-%m-%d")
+        elif report_type == 'daily':
+            day_date_str = data.get('day_date')
+            if not day_date_str:
+                return jsonify({'error': 'Date is required for daily report'}), 400
+            day_date = datetime.strptime(day_date_str, "%Y-%m-%d")
+            start_dt = day_date.replace(hour=6, minute=0, second=0, microsecond=0)
+            end_dt = day_date.replace(hour=19, minute=0, second=0, microsecond=0)
+        else:
+            return jsonify({'error': 'Invalid report type'}), 400
+
+        if start_dt > datetime.now():
+            return jsonify({'error': 'Cannot generate reports for future dates'}), 400
+
+        if end_dt > datetime.now():
+            end_dt = datetime.now()
+
+        if current_app.config.get('ENV') == 'development':
+            report_data, category_totals, grand_totals = generate_report_include_weekends(start_dt, end_dt, filters)
+        else:
+            report_data, category_totals, grand_totals = generate_report(start_dt, end_dt, filters)
+
+        if not report_data:
+            return jsonify({'error': 'No data found for the selected criteria'}), 404
+
+        meta = {
+            'generated_by': current_user.name,
+            'generated_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'start_date': start_dt.strftime("%Y-%m-%d %H:%M"),
+            'end_date': end_dt.strftime("%Y-%m-%d %H:%M")
+        }
+
+        new_cache = ReportCache(user_id=current_user.id)
+        new_cache.report_data = report_data
+        new_cache.category_totals = category_totals
+        new_cache.grand_totals = grand_totals
+        new_cache.meta = meta
+        
+        db.session.add(new_cache)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'report_data': report_data,
+                'category_totals': category_totals,
+                'grand_totals': grand_totals,
+                'meta': meta
+            },
+            'report_id': new_cache.id
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error generating report: {e}")
+        return jsonify({'error': 'Failed to generate report'}), 500
+
 @reports.route('/api/inventory/search')
 @login_required
 def search_inventory():
